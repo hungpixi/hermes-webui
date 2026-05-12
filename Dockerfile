@@ -64,6 +64,12 @@ USER root
 # The init script will skip the download when uv is already on PATH.
 RUN curl -LsSf https://astral.sh/uv/install.sh | env UV_INSTALL_DIR=/usr/local/bin sh
 
+# Dokploy single-container mode: include Hermes Agent source so WebUI can import run_agent.AIAgent.
+# Without this, chat fails with "AIAgent not available" because no host ~/.hermes/hermes-agent is mounted.
+RUN git clone --depth=1 https://github.com/NousResearch/hermes-agent.git /opt/hermes
+ENV HERMES_WEBUI_AGENT_DIR=/opt/hermes
+ENV HERMES_HOME=/home/hermeswebui/.hermes
+
 COPY --chown=root:root . /apptoo
 
 # Bake the git version tag into the image so the settings badge works even
