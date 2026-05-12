@@ -367,9 +367,11 @@ else
     fi
   done
   if [ -n "$_agent_src" ]; then
-    uv pip install "$_agent_src[all]" --trusted-host pypi.org --trusted-host files.pythonhosted.org || error_exit "Failed to install hermes-agent's requirements"
+    # Dokploy/aarch64: hermes-agent[all] can fail on optional mistralai resolution.
+    # Install editable agent without extras, then let WebUI use already-available/runtime provider deps.
+    uv pip install -e "$_agent_src" --trusted-host pypi.org --trusted-host files.pythonhosted.org || error_exit "Failed to install hermes-agent base package"
   else
-    echo ""
+
     echo "!! WARNING: hermes-agent source not found."
     echo "!!   Looked in: ${_agent_paths[0]}"
     echo "!!              ${_agent_paths[1]}"
