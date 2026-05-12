@@ -446,6 +446,22 @@ data.update({
 settings.write_text(json.dumps(data, indent=2))
 PYBOOT
 
+echo ""; echo "== Starting Hermes cron scheduler loop"
+python -u - <<'PYCRON' &
+import os, time, traceback
+os.environ.setdefault('HERMES_CONFIG_PATH', os.path.join(os.environ.get('HERMES_HOME', '/home/hermeswebui/.hermes'), 'config.yaml'))
+print('++ Hermes cron scheduler loop started', flush=True)
+while True:
+    try:
+        from cron.scheduler import tick
+        tick()
+    except Exception:
+        traceback.print_exc()
+    time.sleep(int(os.environ.get('HERMES_CRON_TICK_SECONDS', '60')))
+PYCRON
+export HERMES_WEBUI_CRON_PID=$!
+
+
 echo ""; echo "== Running hermes-webui"
 cd /app; python server.py || error_exit "hermes-webui failed or exited with an error"
 
