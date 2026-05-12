@@ -67,10 +67,9 @@ RUN curl -LsSf https://astral.sh/uv/install.sh | env UV_INSTALL_DIR=/usr/local/b
 
 # Dokploy single-container mode: include Hermes Agent source so WebUI can import run_agent.AIAgent.
 # Without this, chat fails with "AIAgent not available" because no host ~/.hermes/hermes-agent is mounted.
-RUN git clone --depth=1 https://github.com/NousResearch/hermes-agent.git /opt/hermes \n    && mkdir -p /.hermes \n    && cp -a /opt/hermes /.hermes/hermes-agent
-ENV HERMES_WEBUI_AGENT_DIR=/.hermes/hermes-agent
-ENV HERMES_HOME=/.hermes
-ENV PYTHONPATH=/.hermes/hermes-agent:/opt/hermes
+RUN git clone --depth=1 https://github.com/NousResearch/hermes-agent.git /opt/hermes
+ENV HERMES_WEBUI_AGENT_DIR=/opt/hermes
+ENV HERMES_HOME=/home/hermeswebui/.hermes
 
 COPY --chown=root:root . /apptoo
 
