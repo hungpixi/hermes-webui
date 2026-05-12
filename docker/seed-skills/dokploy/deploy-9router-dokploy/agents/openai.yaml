@@ -1,0 +1,4 @@
+interface:
+  display_name: "Deploy 9Router Dokploy"
+  short_description: "Deploy 9Router as a separate Dokploy Nixpacks app."
+  default_prompt: "Deploy or troubleshoot 9Router on Dokploy using the dedicated npm-wrapper repository."

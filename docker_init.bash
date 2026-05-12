@@ -392,12 +392,32 @@ ensure_hindsight_client_docker_dependency
 mkdir -p "$HERMES_WEBUI_STATE_DIR" "$HERMES_HOME" "$HERMES_WEBUI_DEFAULT_WORKSPACE"
 export HERMES_CONFIG_PATH=${HERMES_CONFIG_PATH:-$HERMES_HOME/config.yaml}
 python - <<'PYBOOT'
-import json, os
+import json, os, shutil
 from pathlib import Path
 home = Path(os.environ.get('HERMES_HOME', '/home/hermeswebui/.hermes'))
 state = Path(os.environ['HERMES_WEBUI_STATE_DIR'])
 home.mkdir(parents=True, exist_ok=True)
 state.mkdir(parents=True, exist_ok=True)
+
+# Seed a conservative core skill set into persistent Hermes home for remote cron jobs.
+# Do not overwrite remote edits unless HERMES_SEED_SKILLS_OVERWRITE=1 is set.
+seed = Path('/app/docker/seed-skills')
+skills = home / 'skills'
+skills.mkdir(parents=True, exist_ok=True)
+if seed.exists():
+    overwrite = os.environ.get('HERMES_SEED_SKILLS_OVERWRITE', '').strip().lower() in {'1', 'true', 'yes', 'on'}
+    copied = 0
+    for skill_md in seed.rglob('SKILL.md'):
+        rel_dir = skill_md.parent.relative_to(seed)
+        dst = skills / rel_dir
+        if dst.exists() and not overwrite:
+            continue
+        if dst.exists():
+            shutil.rmtree(dst)
+        shutil.copytree(skill_md.parent, dst)
+        copied += 1
+    print(f"-- Seeded core Hermes skills: {copied} copied, overwrite={overwrite}", flush=True)
+
 key = os.environ.get('NINEROUTER_KEY') or os.environ.get('OPENAI_API_KEY') or ''
 base = os.environ.get('NINEROUTER_URL') or os.environ.get('OPENAI_BASE_URL') or 'https://9router.phamphunguyenhung.com/v1'
 model = os.environ.get('HERMES_WEBUI_DEFAULT_MODEL', 'cx/gpt-5.5')

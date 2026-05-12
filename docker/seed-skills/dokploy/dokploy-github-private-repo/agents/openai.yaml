@@ -1,0 +1,3 @@
+display_name: Dokploy GitHub Private Repo
+short_description: Fix private GitHub repo deploys on Dokploy.
+default_prompt: Use this skill when Dokploy cannot clone a private GitHub repository or logs show Cloning Repo Custom.

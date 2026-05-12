@@ -1,0 +1,4 @@
+interface:
+  display_name: "Use 9Router Default"
+  short_description: "Use the default 9Router endpoint for AI tool API routing."
+  default_prompt: "Use 9Router as the default OpenAI-compatible endpoint for this setup."
