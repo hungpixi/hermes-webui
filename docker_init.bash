@@ -386,6 +386,44 @@ fi
 
 ensure_hindsight_client_docker_dependency
 
+# Dokploy bootstrap: persist sane defaults on ephemeral container storage so onboarding does not reappear after redeploy.
+mkdir -p "$HERMES_WEBUI_STATE_DIR" "$HERMES_HOME" "$HERMES_WEBUI_DEFAULT_WORKSPACE"
+export HERMES_CONFIG_PATH=${HERMES_CONFIG_PATH:-$HERMES_HOME/config.yaml}
+python - <<'PYBOOT'
+import json, os
+from pathlib import Path
+home = Path(os.environ.get('HERMES_HOME', '/home/hermeswebui/.hermes'))
+state = Path(os.environ['HERMES_WEBUI_STATE_DIR'])
+home.mkdir(parents=True, exist_ok=True)
+state.mkdir(parents=True, exist_ok=True)
+key = os.environ.get('NINEROUTER_KEY') or os.environ.get('OPENAI_API_KEY') or ''
+base = os.environ.get('NINEROUTER_URL') or os.environ.get('OPENAI_BASE_URL') or 'https://9router.phamphunguyenhung.com/v1'
+model = os.environ.get('HERMES_WEBUI_DEFAULT_MODEL', 'cx/gpt-5.5')
+config_text = (
+    f"model:\n  provider: custom\n  default: {model}\n  base_url: {base}\n"
+    "providers: {}\n"
+    f"fallback_providers:\n- provider: custom\n  model: {model}\n  base_url: {base}\n"
+    "agent:\n  max_turns: 90\n  gateway_timeout: 1800\n"
+)
+(home / 'config.yaml').write_text(config_text)
+(home / '.env').write_text(
+    f"OPENAI_API_KEY={key}\nOPENAI_BASE_URL={base}\nNINEROUTER_KEY={key}\nNINEROUTER_URL={base}\n"
+)
+settings = state / 'settings.json'
+data = {}
+if settings.exists():
+    try:
+        data = json.loads(settings.read_text())
+    except Exception:
+        data = {}
+data.update({
+    'onboarding_completed': True,
+    'default_workspace': os.environ.get('HERMES_WEBUI_DEFAULT_WORKSPACE', '/workspace'),
+    'api_redact_enabled': True,
+})
+settings.write_text(json.dumps(data, indent=2))
+PYBOOT
+
 echo ""; echo "== Running hermes-webui"
 cd /app; python server.py || error_exit "hermes-webui failed or exited with an error"
 
